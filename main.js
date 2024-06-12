@@ -25,7 +25,8 @@ function mainMenu() {
   console.log("1. Отобразить содержимое таблицы");
   console.log("2. Удалить строку из таблицы");
   console.log("3. Добавить строку в таблицу");
-  console.log("4. Выход");
+  console.log("4. Обновить строку в таблице");
+  console.log("5. Выход");
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -40,10 +41,13 @@ function mainMenu() {
     } else if (choice === "3") {
       insertRowMenu(rl);
     } else if (choice === "4") {
+      updateRowMenu(rl);
+    } else if (choice === "5") {
       rl.close();
       connection.end();
     } else {
       console.log("Некорректный выбор");
+      rl.close();
       mainMenu();
     }
   });
@@ -77,6 +81,7 @@ function displayTable(table_name, rl) {
     }
     console.log(`Содержимое таблицы ${table_name}:`);
     console.table(results);
+    rl.close();
     mainMenu();
   });
 }
@@ -118,6 +123,7 @@ function deleteRow(table_name, column_value, rl) {
         return;
       }
       console.log('Строка успешно удалена');
+      rl.close();
       mainMenu();
     });
   });
@@ -153,7 +159,7 @@ function fillTable(table_name, rl) {
     const values = [];
     function prompt(column_index) {
       if (column_index >= column_names.length) {
-        connection.query(`INSERT INTO ${table_name} VALUES (?)`, [values], (error, results, fields) => {
+        connection.query(`INSERT INTO ${table_name} (${column_names.join(",")}) VALUES (?)`, [values], (error, results, fields) => {
           if (error) {
             console.error('Ошибка выполнения запроса: ' + error.stack);
             rl.close();
@@ -161,6 +167,7 @@ function fillTable(table_name, rl) {
             return;
           }
           console.log('Строка успешно добавлена');
+          rl.close();
           mainMenu();
         });
       } else {
@@ -171,5 +178,56 @@ function fillTable(table_name, rl) {
       }
     }
     prompt(0);
+  });
+}
+
+// Обновление строки в таблице
+function updateRowMenu(rl) {
+  connection.query("SHOW TABLES", (error, tables, fields) => {
+    if (error) {
+      console.error('Ошибка выполнения запроса: ' + error.stack);
+      rl.close();
+      connection.end();
+      return;
+    }
+    console.log("Доступные таблицы:");
+    tables.forEach(table => console.log(table[Object.keys(table)[0]]));
+    rl.question('Выберите таблицу: ', (table_name) => {
+      connection.query(`SHOW COLUMNS FROM ${table_name}`, (error, columns, fields) => {
+        if (error) {
+          console.error('Ошибка выполнения запроса: ' + error.stack);
+          rl.close();
+          connection.end();
+          return;
+        }
+        const column_names = columns.map(column => column.Field);
+        rl.question('Введите значение ключевого столбца для обновления: ', (key_value) => {
+          const updates = {};
+          function promptUpdate(column_index) {
+            if (column_index >= column_names.length) {
+              const setClause = Object.keys(updates).map(key => `${key} = ?`).join(", ");
+              const values = Object.values(updates).concat(key_value);
+              connection.query(`UPDATE ${table_name} SET ${setClause} WHERE ${column_names[0]} = ?`, values, (error, results, fields) => {
+                if (error) {
+                  console.error('Ошибка выполнения запроса: ' + error.stack);
+                  rl.close();
+                  connection.end();
+                  return;
+                }
+                console.log('Строка успешно обновлена');
+                rl.close();
+                mainMenu();
+              });
+            } else {
+              rl.question(`Введите новое значение для ${column_names[column_index]} (оставьте пустым для пропуска): `, (value) => {
+                if (value) updates[column_names[column_index]] = value;
+                promptUpdate(column_index + 1);
+              });
+            }
+          }
+          promptUpdate(1);
+        });
+      });
+    });
   });
 }

@@ -1,0 +1,29 @@
+{
+  "name": "database-traveldb",
+  "version": "1.0.0",
+  "description": "EER-диаграмма проекта",
+  "main": "main.js",
+  "dependencies": {
+    "mysql": "^2.18.1",
+    "mysql2": "^3.10.0",
+    "readline": "^1.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArthurNyan/travel-database.git"
+  },
+  "keywords": [
+    "sql"
+  ],
+  "author": "ArthurNyan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ArthurNyan/travel-database/issues"
+  },
+  "homepage": "https://github.com/ArthurNyan/travel-database#readme"
+}

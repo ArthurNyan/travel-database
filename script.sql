@@ -2,8 +2,6 @@
 CREATE SCHEMA IF NOT EXISTS `travelDB` DEFAULT CHARACTER SET utf8mb3 ;
 USE `travelDB` ;
 
-
-
 CREATE TABLE IF NOT EXISTS `travelDB`.`Countries`(
 	country_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     country_name VARCHAR(255),
@@ -57,7 +55,6 @@ CREATE TABLE IF NOT EXISTS `travelDB`.`Employees` (
 		FOREIGN KEY (agency_id) 
         REFERENCES TravelAgencies(agency_id) 
 );
-
 
 
 

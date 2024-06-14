@@ -26,7 +26,11 @@ function mainMenu() {
   console.log("2. Удалить строку из таблицы");
   console.log("3. Добавить строку в таблицу");
   console.log("4. Обновить строку в таблице");
-  console.log("5. Выход");
+  console.log("5. Поиск билетов по ФИО");
+  console.log("6. Поиск отелей по городу");
+  console.log("7. Поиск городов по стране");
+  console.log("8. Поиск вылетов по городу");
+  console.log("9. Выход");
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -43,6 +47,14 @@ function mainMenu() {
     } else if (choice === "4") {
       updateRowMenu(rl);
     } else if (choice === "5") {
+      searchTicketsByPassengerName(rl);
+    } else if (choice === "6") {
+      searchHotelsByCity(rl);
+    } else if (choice === "7") {
+      searchCitiesByCountry(rl);
+    } else if (choice === "8") {
+      searchFlightsByDepartureCity(rl);
+    } else if (choice === "9") {
       rl.close();
       connection.end();
     } else {
@@ -228,6 +240,93 @@ function updateRowMenu(rl) {
           promptUpdate(1);
         });
       });
+    });
+  });
+}
+
+// Поиск билетов по ФИО
+function searchTicketsByPassengerName(rl) {
+  rl.question('Введите фамилию клиента: ', (surname) => {
+    rl.question('Введите имя клиента: ', (firstname) => {
+      rl.question('Введите отчество клиента: ', (middlename) => {
+        const query = `
+          SELECT 
+            c.firstname, c.surname, c.middlename, t.*
+          FROM 
+            Clients c
+          JOIN 
+            TravelVouchers t ON c.client_id = t.client_id
+          WHERE 
+            c.firstname = ? AND c.surname = ? AND c.middlename = ?;
+        `;
+        connection.query(query, [firstname, surname, middlename], (error, results, fields) => {
+          if (error) {
+            console.error('Ошибка выполнения запроса: ' + error.stack);
+            rl.close();
+            connection.end();
+            return;
+          }
+          console.log(`Найденные билеты для клиента '${firstname} ${middlename} ${surname}':`);
+          console.table(results);
+          rl.close();
+          mainMenu();
+        });
+      });
+    });
+  });
+}
+
+
+// Поиск отелей по городу
+function searchHotelsByCity(rl) {
+  rl.question('Введите название города для поиска отелей: ', (city_name) => {
+    connection.query(`SELECT * FROM Hotels h JOIN Cities c ON h.hotel_city_id = c.city_id WHERE c.city_name = ?`, [city_name], (error, results, fields) => {
+      if (error) {
+        console.error('Ошибка выполнения запроса: ' + error.stack);
+        rl.close();
+        connection.end();
+        return;
+      }
+      console.log(`Найденные отели в городе '${city_name}':`);
+      console.table(results);
+      rl.close();
+      mainMenu();
+    });
+  });
+}
+
+// Поиск городов по стране
+function searchCitiesByCountry(rl) {
+  rl.question('Введите название страны для поиска городов: ', (country_name) => {
+    connection.query(`SELECT * FROM Cities c JOIN Countries co ON c.country_id = co.country_id WHERE co.country_name = ?`, [country_name], (error, results, fields) => {
+      if (error) {
+        console.error('Ошибка выполнения запроса: ' + error.stack);
+        rl.close();
+        connection.end();
+        return;
+      }
+      console.log(`Найденные города в стране '${country_name}':`);
+      console.table(results);
+      rl.close();
+      mainMenu();
+    });
+  });
+}
+
+// Поиск вылетов по городу
+function searchFlightsByDepartureCity(rl) {
+  rl.question('Введите название города для поиска вылетов: ', (city_name) => {
+    connection.query(`SELECT * FROM Flights f JOIN Cities c ON f.arrival_city_id = c.city_id WHERE c.city_name = ?`, [city_name], (error, results, fields) => {
+      if (error) {
+        console.error('Ошибка выполнения запроса: ' + error.stack);
+        rl.close();
+        connection.end();
+        return;
+      }
+      console.log(`Найденные вылеты из города '${city_name}':`);
+      console.table(results);
+      rl.close();
+      mainMenu();
     });
   });
 }
